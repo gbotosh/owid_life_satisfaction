@@ -25,8 +25,9 @@ pacman::p_load(plotly, tidyverse, reactable, here)
 ```{r}
 ## Import data
 cantril <- 
-  read_csv(here("data/happiness-cantril-ladder.csv")) %>% 
+  read_csv(here("data/share-of-people-who-say-they-are-happy.csv")) %>% 
   rename(Country = Entity)
+head(cantril)
 ```
 
 “Please imagine a ladder, with steps numbered from 0 at the bottom to 10 at the top. The top of the ladder represents the best possible life for you and the bottom of the ladder represents the worst possible life for you. On which step of the ladder would you say you personally feel you stand at this time?”
@@ -37,11 +38,11 @@ cantril <-
 
 ```{r}
 cantril %>% 
-  filter(Year %in% c(2011, 2022)) %>% 
-  pivot_wider(names_from = Year, values_from = `Cantril ladder score`, id_cols = Country) %>% 
-  select(Country, `2011`, `2022`) %>% 
-  mutate(`Absolute change` = round(`2022` - `2011`, 3)) %>% 
-  mutate(`Relative change` = (`2022` - `2011`) / `2011`) %>% 
+  filter(Year %in% c(2010, 2022)) %>% 
+  pivot_wider(names_from = Year, values_from = `Happiness: Happy (aggregate)`, id_cols = Country) %>% 
+  select(Country, `2010`, `2022`) %>% 
+  mutate(`Absolute change` = round(`2022` - `2010`, 3)) %>% 
+  mutate(`Relative change` = (`2022` - `2010`) / `2010`) %>% 
   reactable(
     columns = list(`Relative change` = colDef(format = colFormat(percent = TRUE, digits = 1))) 
   )
@@ -51,11 +52,11 @@ cantril %>%
 
 ```{r}
 cantril %>% 
-  mutate(`Cantril ladder score` = round(`Cantril ladder score`, 2)) %>%
+  mutate(`Happiness: Happy (aggregate)` = round(`Happiness: Happy (aggregate)`, 2)) %>%
   plot_geo(width = 940) %>% 
   add_trace(
-    z = ~`Cantril ladder score`,
-    color = ~`Cantril ladder score`,
+    z = ~`Happiness: Happy (aggregate)`,
+    color = ~`Happiness: Happy (aggregate)`,
     locations = ~Code,
     text = ~Country,
     frame = ~Year, colors = "YlGn"
@@ -68,22 +69,24 @@ cantril %>%
 
 ```{r}
 # simple line chart of the data, for five countries on different continents (ggplot, piped into ggplotly)
-
+#filter(Country %in% c("Norway", "Australia", "Germany", "Bolivia", "Colombia", "Bhutan"))
+#scale_y_continuous(limits = c(0, 10)) +
+#head(cantril)
 cantril_chart <- 
   cantril %>% 
   filter(Country %in% c("Norway", "Australia", "Germany", "Bolivia", "Colombia", "Bhutan")) %>%
-  ggplot(aes(x = Year, y = `Cantril ladder score`, color = Country)) +
+  ggplot(aes(x = Year, y = `Happiness: Happy (aggregate)`, color = Country)) +
   geom_line() +
-  scale_y_continuous(limits = c(0, 10)) +
-  labs(x = NULL,
+    labs(x = NULL,
        y = NULL, 
        color = NULL) +
   theme_minimal() 
-
-ggplotly(cantril_chart, width = 940)
+cantril_chart
+#ggplotly(cantril_chart, width = 940)
 ```
 
 ## Advanced (Optional) 📈
+
 
 The following chart demonstrates that it is possible to approximate the functionality of our World in Data grapher for multicountry selection using R, specifically with the `crosstalk` package and a small amount of custom JavaScript. For more information on how to achieve this, see [this Stack Overflow question](https://stackoverflow.com/questions/67058016/how-to-set-default-values-in-filter-select-in-crosstalk-in-r-plotly).
 
@@ -99,7 +102,7 @@ shared_cantril <- highlight_key(cantril)
 cantril_plotly <- plot_ly(
   shared_cantril, 
   x = ~Year, 
-  y = ~`Cantril ladder score`, 
+  y = ~`Happiness: Happy (aggregate)`, 
   color = ~Country, 
   type = "scatter", 
   mode = "lines+markers"
